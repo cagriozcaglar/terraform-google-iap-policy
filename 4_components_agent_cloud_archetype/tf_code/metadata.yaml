@@ -1,0 +1,54 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: TerraformBlueprint
+metadata:
+  name: terraform-google-iap-iam-binding
+  source:
+    type: git
+    location: github.com/GoogleCloudPlatform/terraform-google-iap-iam-binding
+  version: 1.0.0
+  actuationTool:
+    type: Terraform
+    version: ">= 1.3"
+  title: IAP IAM Member
+  description:
+    tagline: Manages IAP IAM policies for Google Cloud web resources.
+    detailed: This module manages IAP IAM policies for web-type resources, such as App Engine applications and backend services. It uses specific IAP IAM resources to apply bindings conditionally based on the web resource type.
+spec:
+  terraform:
+    variables:
+      - name: project_id
+        description: The ID of the project in which the resource belongs. If null, no resources will be created.
+        type: string
+        default: null
+        required: false
+      - name: web_type
+        description: The type of IAP web resource. Must be one of `appEngine` or `backendServices`. If null, no resources will be created.
+        type: string
+        default: null
+        required: false
+      - name: bindings
+        description: A map of IAM bindings. The key is the role and the value is an object with a `members` list and an optional `condition` block. An empty map creates no bindings.
+        type: map(object({ members = list(string), condition = optional(object({ title = string, description = optional(string), expression = string })) }))
+        default: {}
+        required: false
+      - name: app_id
+        description: App Engine application ID. Defaults to `project_id` if not set. Required if `web_type` is `appEngine` and the App Engine app ID is not the same as the project ID.
+        type: string
+        default: null
+        required: false
+      - name: web_backend_service
+        description: The name of the backend service. Required if `web_type` is `backendServices`.
+        type: string
+        default: null
+        required: false
+    outputs:
+      - name: app_engine_bindings
+        description: The created IAP IAM bindings for the App Engine application.
+      - name: backend_service_bindings
+        description: The created IAP IAM bindings for the Backend Service.
+  requirements:
+    roles:
+      - level: Project
+        role: roles/iap.admin
+    services:
+      - iap.googleapis.com
